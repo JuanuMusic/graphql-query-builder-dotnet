@@ -2,10 +2,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.0.0</Version>
+    <Version>2022.12.10.1</Version>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
-    <Authors>Charles de Vandière</Authors>
+    <Authors>Charles de Vandière, JuanuMusic</Authors>
     <Copyright>© 2022 Charles de Vandière</Copyright>
     <Product>GraphQL.Query.Builder</Product>
     <Title>GraphQL.Query.Builder</Title>
@@ -31,12 +32,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\logo.png" Pack="true" PackagePath="/"/>
+    <None Include="..\..\logo.png" Pack="true" PackagePath="/" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="LICENSE" />
     <None Include="..\..\README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
 </Project>
