@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 namespace GraphQL.Query.Builder;
 
 /// <summary>The query class.</summary>
-public class Query<TSource> : IQuery<TSource>
+public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
 {
     private readonly QueryOptions options;
 
@@ -85,7 +86,7 @@ public class Query<TSource> : IQuery<TSource>
     /// <typeparam name="TProperty">The property type.</typeparam>
     /// <param name="selector">The field selector.</param>
     /// <returns>The query.</returns>
-    public IQuery<TSource> AddField<TProperty>(Expression<Func<TSource, TProperty>> selector)
+    public IQuery<TSource>  AddField<TProperty>(Expression<Func<TSource, TProperty>> selector)
     {
         RequiredArgument.NotNull(selector, nameof(selector));
 
@@ -115,7 +116,7 @@ public class Query<TSource> : IQuery<TSource>
     public IQuery<TSource> AddField<TSubSource>(
         Expression<Func<TSource, TSubSource>> selector,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class
+        where TSubSource : DynamicObject
     {
         RequiredArgument.NotNull(selector, nameof(selector));
         RequiredArgument.NotNull(build, nameof(build));
@@ -134,7 +135,7 @@ public class Query<TSource> : IQuery<TSource>
     public IQuery<TSource> AddField<TSubSource>(
         Expression<Func<TSource, IEnumerable<TSubSource>>> selector,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class
+        where TSubSource : DynamicObject
     {
         RequiredArgument.NotNull(selector, nameof(selector));
         RequiredArgument.NotNull(build, nameof(build));
@@ -153,7 +154,7 @@ public class Query<TSource> : IQuery<TSource>
     public IQuery<TSource> AddField<TSubSource>(
         string field,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class
+        where TSubSource : DynamicObject
     {
         RequiredArgument.NotNullOrEmpty(field, nameof(field));
         RequiredArgument.NotNull(build, nameof(build));
@@ -224,6 +225,10 @@ public class Query<TSource> : IQuery<TSource>
     /// <returns>The quer</returns>
     public IQuery<TSource> AddPossibleType(string type)
     {
+        // TODO: Fix using object on parsing result
+        //if (this.PossibleTypesList.Count >= 1)
+        //    throw new Exception($"Cannot add PossibleType {type}. GraphQL UNIONS are incompatible with Typed model languages. You can only add one PossibleType per depth level.");
+
         RequiredArgument.NotNullOrEmpty(type, nameof(type));
         this.PossibleTypesList.Add(type);
         return this;
@@ -235,7 +240,12 @@ public class Query<TSource> : IQuery<TSource>
     /// <param name="build">The possible result query building function.</param>
     /// <returns>The query.</returns>
     public IQuery<TSource> AddPossibleType<TPossibleType>(string field, Expression<Func<IQuery<TPossibleType>, IQuery<TPossibleType>>> build)
+        where TPossibleType : DynamicObject
     {
+        // TODO: Fix using object on parsing result
+        //if (this.PossibleTypesList.Count >= 1)
+        //    throw new Exception($"Cannot add PossibleType {field}. GraphQL UNIONS are incompatible with Typed model languages. You can only add one PossibleType per depth level.");
+
         RequiredArgument.NotNullOrEmpty(field, nameof(field));
         RequiredArgument.NotNull(build, nameof(build));
 
@@ -243,6 +253,7 @@ public class Query<TSource> : IQuery<TSource>
         Query<TPossibleType> query = new(field, this.options);
         IQuery<TPossibleType> subQuery = func.Invoke(query);
 
+        
         this.PossibleTypesList.Add(subQuery);
 
         return this;
@@ -252,7 +263,8 @@ public class Query<TSource> : IQuery<TSource>
     /// <typeparam name="TProperty">The possible type.</typeparam>
     /// <param name="possibleType">The possible type selector.</param>
     /// <returns>The query.</returns>
-    public IQuery<TSource> AddPossibleType<TPossibleType>(Expression<Func<IQuery<TPossibleType>, IQuery<TPossibleType>>> build) where TPossibleType : class
+    public IQuery<TSource> AddPossibleType<TPossibleType>(Expression<Func<IQuery<TPossibleType>, IQuery<TPossibleType>>> build)
+        where TPossibleType : DynamicObject
     {
         RequiredArgument.NotNull(build, nameof(build));
 
@@ -284,7 +296,8 @@ public class Query<TSource> : IQuery<TSource>
 
     }
 
-    private static PropertyInfo GetPropertyInfo<TProperty>(Expression<Func<IQuery<TSource>, IQuery<TProperty>>> lambda)
+    internal static PropertyInfo GetPropertyInfo<TProperty>(Expression<Func<IQuery<TSource>, IQuery<TProperty>>> lambda)
+        where TProperty : DynamicObject
     {
         RequiredArgument.NotNull(lambda, nameof(lambda));
 
@@ -316,7 +329,7 @@ public class Query<TSource> : IQuery<TSource>
     /// <param name="lambda">The lambda.</param>
     /// <typeparam name="TProperty">The property.</typeparam>
     /// <returns>The property infos.</returns>
-    private static PropertyInfo GetPropertyInfo<TProperty>(Expression<Func<TSource, TProperty>> lambda)
+    static PropertyInfo GetPropertyInfo<TProperty>(Expression<Func<TSource, TProperty>> lambda)
     {
         RequiredArgument.NotNull(lambda, nameof(lambda));
 
@@ -344,7 +357,7 @@ public class Query<TSource> : IQuery<TSource>
         return propertyInfo;
     }
 
-    private string GetPropertyName(PropertyInfo property)
+    internal string GetPropertyName(PropertyInfo property)
     {
         RequiredArgument.NotNull(property, nameof(property));
 
@@ -354,7 +367,7 @@ public class Query<TSource> : IQuery<TSource>
             : property.Name;
     }
 
-    protected string GetTypeName(Type type)
+    internal string GetTypeName(Type type)
     {
         RequiredArgument.NotNull(type, nameof(type));
 

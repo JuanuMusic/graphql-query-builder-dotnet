@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq.Expressions;
 
 namespace GraphQL.Query.Builder;
 
 /// <summary>Query of TSource interface.</summary>
-public interface IQuery<TSource> : IQuery
+public interface IQuery<TSource> : IQuery where TSource : DynamicObject
 {
     /// <summary>Gets the select list.</summary>
     List<object> SelectList { get; }
@@ -47,7 +48,7 @@ public interface IQuery<TSource> : IQuery
     IQuery<TSource> AddField<TSubSource>(
         Expression<Func<TSource, TSubSource>> selector,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class;
+        where TSubSource : DynamicObject;
 
     /// <summary>Adds a sub-list field to the query.</summary>
     /// <typeparam name="TSubSource">The sub-list object type.</typeparam>
@@ -57,7 +58,7 @@ public interface IQuery<TSource> : IQuery
     IQuery<TSource> AddField<TSubSource>(
         Expression<Func<TSource, IEnumerable<TSubSource>>> selector,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class;
+        where TSubSource : DynamicObject;
 
     /// <summary>Adds a sub-object field to the query.</summary>
     /// <typeparam name="TSubSource">The sub-object type.</typeparam>
@@ -67,7 +68,7 @@ public interface IQuery<TSource> : IQuery
     IQuery<TSource> AddField<TSubSource>(
         string field,
         Func<IQuery<TSubSource>, IQuery<TSubSource>> build)
-        where TSubSource : class;
+        where TSubSource : DynamicObject;
 
     /// <summary>Adds a new argument to the query.</summary>
     /// <param name="key">The argument name.</param>
@@ -100,12 +101,13 @@ public interface IQuery<TSource> : IQuery
     /// <returns>The query.</returns>
     IQuery<TSource> AddPossibleType<TSubSource>(
         Expression<Func<IQuery<TSubSource>, IQuery<TSubSource>>> build)
-        where TSubSource : class;
+        where TSubSource : DynamicObject;
 
     /// <summary>Adds a possible type as the query result. This uses the `... on Model` clause and requires inner fields to be added to the query.</summary>
     /// <typeparam name="TSubSource">The sub-object type as defined on the Schema.</typeparam>
     /// <param name="field">The possible type.</param>
     /// <param name="build">The possible result query building function.</param>
     /// <returns>The query.</returns>
-    IQuery<TSource> AddPossibleType<TSubSource>(string field, Expression<Func<IQuery<TSubSource>, IQuery<TSubSource>>> build);
+    IQuery<TSource> AddPossibleType<TSubSource>(string field, Expression<Func<IQuery<TSubSource>, IQuery<TSubSource>>> build)
+        where TSubSource : DynamicObject;
 }

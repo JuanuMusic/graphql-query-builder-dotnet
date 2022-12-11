@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -144,7 +145,7 @@ public class QueryStringBuilder : IQueryStringBuilder
 
     /// <summary>Adds query params to the query string.</summary>
     /// <param name="query">The query.</param>
-    protected internal void AddParams<TSource>(IQuery<TSource> query)
+    protected internal void AddParams<TSource>(IQuery<TSource> query) where TSource : DynamicObject
     {
         RequiredArgument.NotNull(query, nameof(query));
 
@@ -163,7 +164,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Adds fields to the query sting.</summary>
     /// <param name="query">The query.</param>
     /// <exception cref="ArgumentException">Invalid Object in Field List</exception>
-    protected internal void AddFields<TSource>(IQuery<TSource> query)
+    protected internal void AddFields<TSource>(IQuery<TSource> query) where TSource : DynamicObject
     {
         foreach (object item in query.SelectList)
         {
@@ -191,7 +192,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Adds fields to the query sting.</summary>
     /// <param name="query">The query.</param>
     /// <exception cref="ArgumentException">Invalid Object in Field List</exception>
-    protected internal void AddPossibleTypes<TSource>(IQuery<TSource> query)
+    protected internal void AddPossibleTypes<TSource>(IQuery<TSource> query) where TSource : DynamicObject
     {
         foreach (object item in query.PossibleTypesList)
         {
@@ -216,7 +217,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Builds the query.</summary>
     /// <param name="query">The query.</param>
     /// <returns>The GraphQL query as string, without outer enclosing block.</returns>
-    public string Build<TSource>(IQuery<TSource> query)
+    public string Build<TSource>(IQuery<TSource> query) where TSource : DynamicObject
     {
         if (!string.IsNullOrWhiteSpace(query.AliasName))
         {
