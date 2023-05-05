@@ -39,7 +39,7 @@ class PokemonService
     public async Task<Pokemon?> GetPokemon(string name)
     {
         IQuery<Pokemon> query = new Query<Pokemon>("pokemon", this.options)
-            .AddArguments(new { name })
+            .AddArguments(new { name }.ToGraphQLObject())
             .AddField(p => p.Id)
             .AddField(p => p.Number)
             .AddField(p => p.Name)
@@ -86,7 +86,7 @@ class PokemonService
     public async Task<IEnumerable<Pokemon?>> GetAllPokemons()
     {
         IQuery<Pokemon> query = new Query<Pokemon>("pokemons", this.options)
-            .AddArguments(new { first = 100 })
+            .AddArguments(new { first = 100 }.ToGraphQLObject())
             .AddField(p => p.Id)
             .AddField(p => p.Number)
             .AddField(p => p.Name)

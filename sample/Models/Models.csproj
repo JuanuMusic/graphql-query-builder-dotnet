@@ -11,4 +11,7 @@
     <PackageReference Include="System.Text.Json" Version="6.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GraphQL.Query.Builder\GraphQL.Query.Builder.csproj" />
+  </ItemGroup>
 </Project>

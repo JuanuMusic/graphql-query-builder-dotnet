@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
+using GraphQL.Query.Builder;
 using Newtonsoft.Json;
 
 namespace Shared.Models;
 
-public class Attack
+public class Attack : GraphQLObject
 {
     [JsonPropertyName("name")]
     [JsonProperty("name")]

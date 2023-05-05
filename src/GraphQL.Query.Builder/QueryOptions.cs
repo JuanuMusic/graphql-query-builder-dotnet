@@ -14,4 +14,6 @@ public class QueryOptions
 
     /// <summary>Gets or sets the query string builder factory.</summary>
     public Func<IQueryStringBuilder> QueryStringBuilderFactory { get; set; }
+
+    public Func<string, string> StringFormatter { get; set; }   
 }

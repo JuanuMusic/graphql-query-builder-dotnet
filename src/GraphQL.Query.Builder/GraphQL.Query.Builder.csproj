@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <None Remove="Formatters\" />
+    <None Remove="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\logo.png" Pack="true" PackagePath="/" />
@@ -42,6 +43,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Formatters\" />

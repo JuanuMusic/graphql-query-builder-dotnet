@@ -382,7 +382,7 @@ public class QueryStringBuilderTests
             { "map", fromToMap },
             { "name", TestEnum.HAYstack }
         };
-        IQuery<object> query = new Query<object>("test1")
+        IQuery<GraphQLObject> query = new Query<GraphQLObject>("test1")
             .AddField("name")
             .AddArguments(nestedListMap);
 
@@ -404,11 +404,11 @@ public class QueryStringBuilderTests
             { "__debug", TestEnum.DISABLED },
             { "SuperQuerySpeed", TestEnum.ENABLED }
         };
-        IQuery<object> query = new Query<object>("test1")
+        IQuery<GraphQLObject> query = new Query<GraphQLObject>("test1")
             .AddField("more")
             .AddField("things")
             .AddField("in_a_select")
-            .AddField<object>("subSelect", q => q
+            .AddField<GraphQLObject>("subSelect", q => q
                 .AddField("subName")
                 .AddField("subMake")
                 .AddField("subModel")
@@ -433,36 +433,37 @@ public class QueryStringBuilderTests
             { "__debug", TestEnum.DISABLED },
             { "SuperQuerySpeed", TestEnum.ENABLED }
         };
-        IQuery<object> query = new Query<object>("test1")
+        IQuery<GraphQLObject> query = new Query<GraphQLObject>("test1")
             .Alias("test1Alias")
             .AddField("more")
             .AddField("things")
             .AddField("in_a_select")
-            .AddField<object>("subSelect", q => q
+            .AddField<GraphQLObject>("subSelect", q => q
                 .AddField("subName")
                 .AddField("subMake")
                 .AddField("subModel")
                 .AddArguments(mySubDict))
-            .AddPossibleType<object>("PossibleResult", q => q
+            .AddPossibleType<GraphQLObject>("PossibleResult", q => q
                 .AddField("subField1")
                 .AddField("subField2"));
 
+        string strQuery = new QueryStringBuilder().Build(query);
         Assert.Equal(
             "test1Alias:test1{more things in_a_select subSelect(subMake:\"aston martin\",subState:\"ca\",subLimit:1,__debug:DISABLED,SuperQuerySpeed:ENABLED){subName subMake subModel} ... on PossibleResult{subField1 subField2}}",
-            new QueryStringBuilder().Build(query));
+            strQuery);
     }
 
     [Fact]
     public void Build_NestedPossibleTypes()
     {
-        IQuery<object> query = new Query<object>("test1")
+        IQuery<GraphQLObject> query = new Query<GraphQLObject>("test1")
             .Alias("test1Alias")
             .AddField("field1")
-            .AddField<object>("field2", q => q
+            .AddField<GraphQLObject>("field2", q => q
                 .AddField("subField21")
-                .AddPossibleType<object>("SubPossibleResult", q => q
+                .AddPossibleType<GraphQLObject>("SubPossibleResult", q => q
                     .AddField("possibleResultField1")))
-            .AddPossibleType<object>("RootPossibleResult", q => q
+            .AddPossibleType<GraphQLObject>("RootPossibleResult", q => q
                 .AddField("rootPossibleResultField1"));
 
         Assert.Equal(
@@ -473,17 +474,18 @@ public class QueryStringBuilderTests
     [Fact]
     public void QueryWithoutField()
     {
-        Query<object> query = new("test");
+        Query<GraphQLObject> query = new("test");
 
         Assert.Equal("test", new QueryStringBuilder().Build(query));
     }
 
     [Fact]
-    public void QueryWithFormatter()
+    public void QueryWithFormatters()
     {
         static string formatter(PropertyInfo property) => $"FIELD_{property.Name}";
+        static string stringFormatter(string value) => $"FIELD_{value}";
 
-        QueryStringBuilder builder = new(formatter);
+        QueryStringBuilder builder = new(formatter, stringFormatter);
         string param = builder.FormatQueryParam(new { Id = "urv7fe53", Name = "Bob" });
 
         Assert.Equal("{FIELD_Id:\"urv7fe53\",FIELD_Name:\"Bob\"}", param);

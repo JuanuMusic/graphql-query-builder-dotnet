@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace GraphQL.Query.Builder;
 
 /// <summary>Query of TSource interface.</summary>
-public interface IQuery<TSource> : IQuery where TSource : DynamicObject
+public interface IQuery<TSource> : IQuery
 {
     /// <summary>Gets the select list.</summary>
     List<object> SelectList { get; }
@@ -85,7 +85,14 @@ public interface IQuery<TSource> : IQuery where TSource : DynamicObject
     /// <typeparam name="TArguments">The arguments object type.</typeparam>
     /// <param name="arguments">The arguments object.</param>
     /// <returns>The query.</returns>
-    IQuery<TSource> AddArguments<TArguments>(TArguments arguments) where TArguments : class;
+    IQuery<TSource> AddArguments<TArguments>(TArguments arguments) where TArguments : GraphQLObject;
+
+    /// <summary>
+    /// Adds arguments to the query
+    /// </summary>
+    /// <param name="arguments">The arguments object</param>
+    /// <returns></returns>
+    public IQuery<TSource> AddArguments(object arguments);
 
     /// <summary>
     /// Adds a possible type as the query result. This uses the `... on Model` clause and requires inner fields to be added to the query.

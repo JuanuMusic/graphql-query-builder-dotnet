@@ -11,5 +11,5 @@ public interface IQueryStringBuilder
     /// <summary>Builds the query.</summary>
     /// <param name="query">The query.</param>
     /// <returns>The GraphQL query as string, without outer enclosing block.</returns>
-    string Build<TSource>(IQuery<TSource> query) where TSource : DynamicObject;
+    string Build<TSource>(IQuery<TSource> query);
 }

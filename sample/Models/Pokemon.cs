@@ -1,10 +1,11 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using GraphQL.Query.Builder;
 
 namespace Shared.Models;
 
-public class Pokemon
+public class Pokemon : GraphQLObject
 {
     [JsonPropertyName("attacks")]
     [JsonProperty("attacks")]

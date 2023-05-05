@@ -1,4 +1,5 @@
 using System;
+using System.Dynamic;
 using System.Text;
 using Xunit;
 
@@ -13,7 +14,7 @@ public class CustomQueryStringBuilderTests
         {
             QueryStringBuilderFactory = () => new ConstantCaseEnumQueryStringBuilder()
         };
-        string query = new Query<object>("something", options)
+        string query = new Query<DynamicObject>("something", options)
             .AddArgument("case", Cases.ConstantCase)
             .AddField("some")
             .Build();
@@ -67,14 +68,15 @@ public class CustomQueryStringBuilderTests
         {
             Formatter = CamelCasePropertyNameFormatter.Formatter
         };
-        string query = new Query<object>("something", options)
+        
+        string query = new Query<GraphQLObject>("something", options)
             .AddArguments(new
             {
                 SomeObject = new
                 {
                     InnerObjectField = "camel case"
-                }
-            })
+                } 
+            }.ToGraphQLObject())
             .AddField("some")
             .Build();
 

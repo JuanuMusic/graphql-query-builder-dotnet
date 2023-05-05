@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace GraphQL.Query.Builder;
 
 /// <summary>The query class.</summary>
-public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
+public class Query<TSource> : IQuery<TSource>
 {
     private readonly QueryOptions options;
 
@@ -42,7 +42,7 @@ public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
     /// <summary>
     /// Gets the Query runner object that executes queries.
     /// </summary>
-    public Func<IQuery<TSource>,Task<TSource>> QueryRunner { get; private set; }
+    public Func<IQuery<TSource>, Task<TSource>> QueryRunner { get; private set; }
 
     /// <summary>Initializes a new instance of the <see cref="ExecutableQuery{TSource}" /> class.</summary>
     public Query(string name, QueryType type = QueryType.Query)
@@ -66,7 +66,7 @@ public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
         }
         else if (options?.Formatter != null)
         {
-            this.QueryStringBuilder = new QueryStringBuilder(options.Formatter);
+            this.QueryStringBuilder = new QueryStringBuilder(options.Formatter,options.StringFormatter);
         }
     }
 
@@ -86,7 +86,7 @@ public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
     /// <typeparam name="TProperty">The property type.</typeparam>
     /// <param name="selector">The field selector.</param>
     /// <returns>The query.</returns>
-    public IQuery<TSource>  AddField<TProperty>(Expression<Func<TSource, TProperty>> selector)
+    public IQuery<TSource> AddField<TProperty>(Expression<Func<TSource, TProperty>> selector)
     {
         RequiredArgument.NotNull(selector, nameof(selector));
 
@@ -195,24 +195,28 @@ public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
         return this;
     }
 
+    public IQuery<TSource> AddArguments(object arguments)
+        => AddArguments(arguments.ToGraphQLObject());
+
     /// <summary>Adds arguments to the query.</summary>
     /// <typeparam name="TArguments">The arguments object type.</typeparam>
     /// <param name="arguments">The arguments object.</param>
     /// <returns>The query.</returns>
-    public IQuery<TSource> AddArguments<TArguments>(TArguments arguments) where TArguments : class
+    public IQuery<TSource> AddArguments<TArguments>(TArguments arguments)
+        where TArguments : GraphQLObject
     {
-        RequiredArgument.NotNull(arguments, nameof(arguments));
 
-        IEnumerable<PropertyInfo> properties = arguments
-            .GetType()
-            .GetProperties()
-            .Where(property => property.GetValue(arguments) != null)
-            .OrderBy(property => property.Name);
-        foreach (PropertyInfo property in properties)
+        RequiredArgument.NotNull(arguments, nameof(arguments));
+        var graphObj = ((GraphQLObject)arguments);
+        var keys = graphObj.Keys;
+        //IEnumerable<PropertyInfo> properties = arguments
+        //    .GetType()
+        //    .GetProperties()
+        //    .Where(property => property.GetValue(arguments) != null)
+        //    .OrderBy(property => property.Name);
+        foreach (string k in keys)
         {
-            this.Arguments.Add(
-                this.GetPropertyName(property),
-                property.GetValue(arguments));
+            this.Arguments.Add(k, graphObj[k]);
         }
 
         return this;
@@ -253,7 +257,7 @@ public class Query<TSource> : IQuery<TSource> where TSource : DynamicObject
         Query<TPossibleType> query = new(field, this.options);
         IQuery<TPossibleType> subQuery = func.Invoke(query);
 
-        
+
         this.PossibleTypesList.Add(subQuery);
 
         return this;

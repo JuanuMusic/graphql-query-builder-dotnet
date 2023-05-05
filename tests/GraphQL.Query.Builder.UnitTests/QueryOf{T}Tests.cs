@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using GraphQL.Query.Builder.UnitTests.Models;
 using Xunit;
@@ -15,7 +16,7 @@ public class QueryOfTTests
         // Arrange
         const string name = "user";
 
-        Query<object> query = new(name);
+        Query<DynamicObject> query = new(name);
 
         // Assert
         Assert.Equal(name, query.Name);
@@ -24,14 +25,14 @@ public class QueryOfTTests
     [Fact]
     public void Query_name_required()
     {
-        Assert.Throws<ArgumentNullException>(() => new Query<object>(null));
+        Assert.Throws<ArgumentNullException>(() => new Query<DynamicObject>(null));
     }
 
     [Fact]
     public void AddField_list()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         List<string> selectList = new()
         {
@@ -53,7 +54,7 @@ public class QueryOfTTests
     public void AddField_string()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         const string select = "id";
 
@@ -68,7 +69,7 @@ public class QueryOfTTests
     public void AddField_chained()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         // Act
         query.AddField("some").AddField("thing").AddField("else");
@@ -87,7 +88,7 @@ public class QueryOfTTests
     public void AddField_array()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         string[] selects =
         {
@@ -115,7 +116,7 @@ public class QueryOfTTests
     public void AddArgument_string_number()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         // Act
         query.AddArgument("id", 1);
@@ -128,7 +129,7 @@ public class QueryOfTTests
     public void AddArgument_string_string()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         // Act
         query.AddArgument("name", "danny");
@@ -141,7 +142,7 @@ public class QueryOfTTests
     public void AddArgument_string_dictionary()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         Dictionary<string, int> dict = new()
         {
@@ -150,20 +151,19 @@ public class QueryOfTTests
         };
 
         // Act
-        query.AddArgument("price", dict);
+        query.AddArgument("price", dict.ToGraphQLObject());
 
         // Assert
-        Dictionary<string, int> queryWhere = (Dictionary<string, int>)query.Arguments["price"];
+        GraphQLObject queryWhere = (GraphQLObject)query.Arguments["price"];
         Assert.Equal(1, queryWhere["from"]);
         Assert.Equal(100, queryWhere["to"]);
-        Assert.Equal(dict, (ICollection)query.Arguments["price"]);
     }
 
     [Fact]
     public void AddArguments_object()
     {
         // Arrange
-        Query<object> query = new("car");
+        Query<GraphQLObject> query = new("car");
 
         Car car = new()
         {
@@ -184,16 +184,16 @@ public class QueryOfTTests
     public void AddArguments_anonymous()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<GraphQLObject> query = new("something");
 
-        var @object = new
+        var obj = new
         {
             from = 1,
             to = 100
         };
 
         // Act
-        query.AddArguments<dynamic>(@object);
+        query.AddArguments(obj);
 
         // Assert
         Assert.Equal(2, query.Arguments.Count);
@@ -205,7 +205,7 @@ public class QueryOfTTests
     public void AddArguments_dictionary()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         Dictionary<string, object> dictionary = new()
         {
@@ -226,7 +226,7 @@ public class QueryOfTTests
     public void AddArgument_chained()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<DynamicObject> query = new("something");
 
         Dictionary<string, int> dict = new()
         {
@@ -324,7 +324,7 @@ public class QueryOfTTests
     public void TestQuery_build()
     {
         IQuery<Car>? query = new Query<Car>("car")
-            .AddArguments(new { id = "yk8h4vn0", km = 2100, imported = true, page = new { from = 1, to = 100 } })
+            .AddArguments(new { id = "yk8h4vn0", km = 2100, imported = true, page = new { from = 1, to = 100 } }.ToGraphQLObject())
             .AddField(car => car.Name)
             .AddField(car => car.Price)
             .AddField(
@@ -336,7 +336,7 @@ public class QueryOfTTests
 
         string result = query.Build();
 
-        Assert.Equal("car(id:\"yk8h4vn0\",imported:true,km:2100,page:{from:1,to:100}){Name Price Color{Red Green Blue}}", result);
+        Assert.Equal("car(id:\"yk8h4vn0\",km:2100,imported:true,page:{from:1,to:100}){Name Price Color{Red Green Blue}}", result);
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public class QueryOfTTests
     public void AddPossibleType_array()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<GraphQLObject> query = new("something");
 
         string[] types =
         {
@@ -385,7 +385,7 @@ public class QueryOfTTests
     public void AddPossibleType_chained()
     {
         // Arrange
-        Query<object> query = new("something");
+        Query<GraphQLObject> query = new("something");
 
         // Act
         query.AddPossibleType("UnionA").AddPossibleType("UnionB").AddPossibleType("UnionC");
@@ -421,7 +421,7 @@ public class QueryOfTTests
 
     }
 
-    class ObjectWithList
+    class ObjectWithList : GraphQLObject
     {
         public IEnumerable<SubObject>? IEnumerable { get; set; }
         public List<SubObject>? List { get; set; }
@@ -429,7 +429,7 @@ public class QueryOfTTests
         public SubObject[]? Array { get; set; }
     }
 
-    class SubObject
+    class SubObject : GraphQLObject
     {
         public byte Id { get; set; }
     }

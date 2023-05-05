@@ -14,6 +14,7 @@ namespace GraphQL.Query.Builder;
 public class QueryStringBuilder : IQueryStringBuilder
 {
     private readonly Func<PropertyInfo, string> formatter;
+    private readonly Func<string, string> stringFormatter;
 
     /// <summary>The query string builder.</summary>
     public StringBuilder QueryString { get; } = new StringBuilder();
@@ -23,9 +24,10 @@ public class QueryStringBuilder : IQueryStringBuilder
 
     /// <summary>Initializes a new instance of the <see cref="QueryStringBuilder" /> class.</summary>
     /// <param name="formatter">The property name formatter</param>
-    public QueryStringBuilder(Func<PropertyInfo, string> formatter)
+    public QueryStringBuilder(Func<PropertyInfo, string> formatter, Func<string, string> stringFormatter)
     {
         this.formatter = formatter;
+        this.stringFormatter = stringFormatter;
     }
 
     /// <summary>Clears the string builder.</summary>
@@ -129,23 +131,34 @@ public class QueryStringBuilder : IQueryStringBuilder
     }
 
     /// <summary>Convert object into dictionary.</summary>
-    /// <param name="object">The object.</param>
+    /// <param name="obj">The object.</param>
     /// <returns>The object as dictionary.</returns>
-    internal Dictionary<string, object> ObjectToDictionary(object @object) =>
-        @object
-            .GetType()
-            .GetProperties()
-            .Where(property => property.GetValue(@object) != null)
-            .Select(property =>
-                new KeyValuePair<string, object>(
-                    this.formatter is not null ? this.formatter.Invoke(property) : property.Name,
-                    property.GetValue(@object)))
-            .OrderBy(property => property.Key)
-            .ToDictionary(property => property.Key, property => property.Value);
+    internal Dictionary<string, object> ObjectToDictionary(object obj)
+    {
+        if (obj.GetType().IsAssignableFrom(typeof(GraphQLObject))) {
+            return ((GraphQLObject)obj).ToDictionary()
+                .ToDictionary(
+                k => this.stringFormatter is not null ? this.stringFormatter.Invoke(k.Key) : k.Key,
+                v => v.Value
+                ); 
+        }
+        else {
+            return obj
+                .GetType()
+                .GetProperties()
+                .Where(property => property.GetValue(obj) != null)
+                .Select(property =>
+                    new KeyValuePair<string, object>(
+                        this.formatter is not null ? this.formatter.Invoke(property) : property.Name,
+                        property.GetValue(obj)))
+                .OrderBy(property => property.Key)
+                .ToDictionary(property => property.Key, property => property.Value);
+        }
+    }
 
     /// <summary>Adds query params to the query string.</summary>
     /// <param name="query">The query.</param>
-    protected internal void AddParams<TSource>(IQuery<TSource> query) where TSource : DynamicObject
+    protected internal void AddParams<TSource>(IQuery<TSource> query)
     {
         RequiredArgument.NotNull(query, nameof(query));
 
@@ -164,7 +177,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Adds fields to the query sting.</summary>
     /// <param name="query">The query.</param>
     /// <exception cref="ArgumentException">Invalid Object in Field List</exception>
-    protected internal void AddFields<TSource>(IQuery<TSource> query) where TSource : DynamicObject
+    protected internal void AddFields<TSource>(IQuery<TSource> query)
     {
         foreach (object item in query.SelectList)
         {
@@ -192,7 +205,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Adds fields to the query sting.</summary>
     /// <param name="query">The query.</param>
     /// <exception cref="ArgumentException">Invalid Object in Field List</exception>
-    protected internal void AddPossibleTypes<TSource>(IQuery<TSource> query) where TSource : DynamicObject
+    protected internal void AddPossibleTypes<TSource>(IQuery<TSource> query)
     {
         foreach (object item in query.PossibleTypesList)
         {
@@ -217,7 +230,7 @@ public class QueryStringBuilder : IQueryStringBuilder
     /// <summary>Builds the query.</summary>
     /// <param name="query">The query.</param>
     /// <returns>The GraphQL query as string, without outer enclosing block.</returns>
-    public string Build<TSource>(IQuery<TSource> query) where TSource : DynamicObject
+    public string Build<TSource>(IQuery<TSource> query)
     {
         if (!string.IsNullOrWhiteSpace(query.AliasName))
         {

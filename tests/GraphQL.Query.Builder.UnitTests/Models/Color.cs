@@ -1,6 +1,8 @@
+using System.Dynamic;
+
 namespace GraphQL.Query.Builder.UnitTests.Models;
 
-public class Color
+public class Color : DynamicObject
 {
     public byte Red { get; set; }
     public byte Green { get; set; }
